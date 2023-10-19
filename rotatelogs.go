@@ -14,8 +14,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lestrrat-go/file-rotatelogs/internal/fileutil"
 	strftime "github.com/lestrrat-go/strftime"
+	"github.com/lupc/go-file-rotatelogs/internal/fileutil"
 	"github.com/pkg/errors"
 )
 
@@ -51,6 +51,11 @@ func New(p string, options ...Option) (*RotateLogs, error) {
 			clock = o.Value().(Clock)
 		case optkeyLinkName:
 			linkName = o.Value().(string)
+			absPath, err := filepath.Abs(linkName)
+			if err != nil {
+				return nil, errors.Wrap(err, `linkName to abs path err`)
+			}
+			linkName = absPath
 		case optkeyMaxAge:
 			maxAge = o.Value().(time.Duration)
 			if maxAge < 0 {
@@ -123,6 +128,11 @@ func (rl *RotateLogs) getWriterNolock(bailOnRotateFail, useGenerationalNames boo
 	// This filename contains the name of the "NEW" filename
 	// to log to, which may be newer than rl.currentFilename
 	baseFn := fileutil.GenerateFn(rl.pattern, rl.clock, rl.rotationTime)
+	absPath, err := filepath.Abs(baseFn)
+	if err != nil {
+		return nil, errors.Wrapf(err, `failed to abs filename %v`, baseFn)
+	}
+	baseFn = absPath
 	filename := baseFn
 	var forceNewFile bool
 
@@ -254,6 +264,7 @@ func (rl *RotateLogs) Rotate() error {
 }
 
 func (rl *RotateLogs) rotateNolock(filename string) error {
+
 	lockfn := filename + `_lock`
 	fh, err := os.OpenFile(lockfn, os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
