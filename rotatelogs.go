@@ -170,7 +170,12 @@ func (rl *RotateLogs) getWriterNolock(bailOnRotateFail, useGenerationalNames boo
 			// 	name = fmt.Sprintf("%d.%s", generation, filename)
 			// }
 			path, fname := filepath.Split(filename)
-			name = path + fmt.Sprintf("%d.%s", generation, fname)
+			ext := filepath.Ext(fname)
+			fname = strings.ReplaceAll(fname, ext, "")
+			name = path + fmt.Sprintf("%s_%d", fname, generation)
+			if ext != "" {
+				name += ext
+			}
 			if _, err := os.Stat(name); err != nil {
 				filename = name
 
