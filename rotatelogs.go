@@ -164,11 +164,12 @@ func (rl *RotateLogs) getWriterNolock(bailOnRotateFail, useGenerationalNames boo
 		// generational names such as "foo.1", "foo.2", "foo.3", etc
 		var name string
 		for {
-			if generation == 0 {
-				name = filename
-			} else {
-				name = fmt.Sprintf("%s.%d", filename, generation)
-			}
+			// if generation == 0 {
+			// 	name = filename
+			// } else {
+			// 	name = fmt.Sprintf("%d.%s", generation, filename)
+			// }
+			name = fmt.Sprintf("%d.%s", generation, filename)
 			if _, err := os.Stat(name); err != nil {
 				filename = name
 
